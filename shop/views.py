@@ -5,9 +5,11 @@ from .utils import cookieCart, cartData, guestOrder
 from django.contrib.auth.forms import UserCreationForm
 import json
 import datetime
-from . forms import CreateUserForm
+from . forms import CreateUserForm, CreateCustomerForm
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import get_user_model
+from django.views.generic import DetailView
 
 def store(request):
     data = cartData(request)
@@ -51,9 +53,9 @@ def updateItem(request):
 
     customer = request.user.customer
     product = models.Product.objects.get(id=productId)
-    order, created = models.Order.objects.get_or_create(customer=customer, complete=False)
+    order, created = models.Order.objects.get_or_create(customer_id=customer, complete=False, is_paid=False)
 
-    orderItem, created = models.OrderItem.objects.get_or_create(order=order, product=product)
+    orderItem, created = models.OrderItem.objects.get_or_create(order_id=order, product_id=product)
 
     if action == 'add':
         orderItem.quantity = (orderItem.quantity + 1)
@@ -73,7 +75,7 @@ def processOrder(request):
 
     if request.user.is_authenticated:
         customer = request.user.customer
-        order, created = models.Order.objects.get_or_create(customer=customer, complete=False)
+        order, created = models.Order.objects.get_or_create(customer_id=customer, complete=False)
 
     else:
         customer, order = guestOrder(request, data)
@@ -86,33 +88,31 @@ def processOrder(request):
 
     order.save()
 
-
-    if order.shipping == True:
-        models.ShippingAdress.objects.create(
-            customer=customer,
-            order=order,
-            adress=data['shipping']['adress'],
-            city=data['shipping']['city'],
-            state=data['shipping']['state'],
-            zipcode=data['shipping']['zipcode'],
-            )
-
-
     return JsonResponse('Payment complete', safe=False)
 
 
 def registerPage(request):
-    form = CreateUserForm()
+    user_form = CreateUserForm()
+    customer_form = CreateCustomerForm()
 
     if request.method == 'POST':
-        form = CreateUserForm(request.POST)
-        if form.is_valid():
-            form.save()
-            user = form.cleaned_data.get('username')
-            messages.success(request, 'Account was created for' + user)
+        user_form = CreateUserForm(request.POST)
+        customer_form = CreateCustomerForm(request.POST)
+        if user_form.is_valid() and customer_form.is_valid():
+            user_form.save()
+            username = user_form.cleaned_data.get('username')
+            User = get_user_model()
+            user = User.objects.get(username=username)
+            first_name = customer_form.cleaned_data['first_name']
+            last_name = customer_form.cleaned_data['last_name']
+            phone_number = customer_form.cleaned_data['phone_number']
+            customer = models.Customer(user_id=user, first_name=first_name,
+            last_name=last_name, phone_number=phone_number)
+            customer.save()
+            messages.success(request, 'Account was created for' + username)
             return redirect('ecom:login')
 
-    ctx = {'form':form}
+    ctx = {'user_form':user_form, 'customer_form':customer_form}
     return render(request, 'ecom/register.html', ctx)
 
 def loginPage(request):
@@ -139,7 +139,19 @@ def logoutUser(request):
     return redirect('ecom:login')
 
 
+class ProductDetail(DetailView):
 
+    model = models.Product
+    template_name = 'ecom/detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        data = cartData(self.request)
+
+        cartItems = data['cartItems']
+
+        context['cartItems'] = cartItems
+        return context
 
 
 

@@ -1,20 +1,33 @@
 from django.db import models
+from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 
-class Customer(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+class Cafe(models.Model):
+    adress = models.CharField(max_length=200, null=True)
     name = models.CharField(max_length=200, null=True)
-    email = models.EmailField(max_length=254, null=True)
+    photo = models.ImageField(null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return self.adress
+
+
+class Customer(models.Model):
+    phone_regex = RegexValidator(regex=r'^\+\d{11}$|^8\d{10}$|^\(\d{3}\)\d{7}$|^\(\d{3}\)\d{3}\-\d{2}\-\d{2}$', message='Please, enter the valid phone number')
+    user_id = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    phone_number = models.CharField('Phone Number', validators=[phone_regex], max_length=25)
+    first_name = models.CharField(max_length=200, null=True)
+    last_name = models.CharField(max_length=200, null=True)
+    bonuses = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.phone_number
 
 
 class Product(models.Model):
     name = models.CharField(max_length=200, null=True)
     price = models.DecimalField(max_digits=7, decimal_places=2)
-    digital = models.BooleanField(default=False, null=True, blank=False)
     image = models.ImageField(null=True, blank=True)
+    description = models.TextField(default='Here be descriptions')
 
     def __str__(self):
         return self.name
@@ -29,10 +42,17 @@ class Product(models.Model):
 
 
 class Order(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, blank=True, null=True)
+    PAYMENT_METHODS = (
+        (1, 'Cash'),
+        (2, 'Online')
+        )
+    customer_id = models.ForeignKey(Customer, on_delete=models.SET_NULL, blank=True, null=True)
     date_ordered = models.DateTimeField(auto_now_add=True)
     complete = models.BooleanField(default=False, null=True, blank=False)
+    is_paid = models.BooleanField(default=False, null=True, blank=False)
+    payment_method = models.CharField(max_length=1, choices=PAYMENT_METHODS, null=True)
     transaction_id = models.CharField(max_length=200, null=True)
+    cafe_id = models.ForeignKey(Cafe, on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return str(self.id)
@@ -60,8 +80,8 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, blank=True, null=True)
-    order = models.ForeignKey(Order, on_delete=models.SET_NULL, blank=True, null=True)
+    product_id = models.ForeignKey(Product, on_delete=models.SET_NULL, blank=True, null=True)
+    order_id = models.ForeignKey(Order, on_delete=models.SET_NULL, blank=True, null=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
 
@@ -70,21 +90,11 @@ class OrderItem(models.Model):
 
     @property
     def get_total(self):
-        total = self.product.price * self.quantity
+        total = self.product_id.price * self.quantity
         return total
 
 
-class ShopAdress(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, blank=True, null=True)
-    order = models.ForeignKey(Order, on_delete=models.SET_NULL, blank=True, null=True)
-    adress = models.CharField(max_length=200, null=True)
-    city = models.CharField(max_length=200, null=True)
-    state = models.CharField(max_length=200, null=True)
-    zipcode = models.CharField(max_length=200, null=True)
-    date_added = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.adress
 
 
 

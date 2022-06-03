@@ -4,7 +4,8 @@ from .models import *
 
 def cookieCart(request):
     """This function takes a request and checks for a cookie containing JSON with
-    all the products added to the cart by the unathenticated user
+    all the products added to the cart by the unathenticated user and returns
+    dictionary containing all said items
 
     return: dict
     """
@@ -55,7 +56,7 @@ def cartData(request):
     """
     if request.user.is_authenticated:
         customer = request.user.customer
-        order, created = Order.objects.get_or_create(customer=customer,
+        order, created = Order.objects.get_or_create(customer_id=customer, is_paid=False,
         complete=False)
         items = order.orderitem_set.all()
         cartItems = order.get_cart_items
@@ -68,29 +69,38 @@ def cartData(request):
 
 
 def guestOrder(request, data):
+    """This function takes request and data from the checkout form and
+    creates an order with customer set as customer without the user
+    """
+
+    # Fetch data from the form
     name = data['form']['name']
-    email = data['form']['email']
+    phone_number = data['form']['phone_number']
 
     cookieData = cookieCart(request)
     items = cookieData['items']
 
+    # Checks if this customer already exists or not
     customer, created = Customer.objects.get_or_create(
-        email=email
+        phone_number=phone_number
         )
 
     customer.name = name
     customer.save()
 
+    # Create new order for this customer
     order = Order.objects.create(
-        customer=customer,
-        complete=False
+        customer_id=customer,
+        complete=False,
+        is_paid=False
         )
 
+    # Add items from cookie cart to the order
     for item in items:
         product = Product.objects.get(id=item['product']['id'])
         orderItem = OrderItem.objects.create(
-            product=product,
-            order=order,
+            product_id=product,
+            order_id=order,
             quantity=item['quantity']
             )
 

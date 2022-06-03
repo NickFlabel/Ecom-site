@@ -16,6 +16,9 @@ for (var i = 0; i < updateBtns.length; i++) {
 }
 
 function updateUserOrder(productId, action) {
+    // This function takes the productId and action from the html element
+    // and makes changes to the orderItem with the productId pk
+    // This is for logged in user
     console.log('User is authenticated, sending data...');
 
     var url = '/update_item/';
@@ -38,6 +41,9 @@ function updateUserOrder(productId, action) {
 }
 
 function addCookieItem(productId, action) {
+    // This function takes the productId and action from the html element
+    // and makes changes to the orderItem with the productId pk
+    // This is for anonymous user
     if (action =='add') {
         if (cart[productId] == undefined) {
             cart[productId] = {'quantity':1};
