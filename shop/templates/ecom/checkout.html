@@ -16,6 +16,7 @@
 							pattern="/^[+]\d{11}$|^8\d{10}$|^[(]d{3}[)]d{7}$|^[(]d{3}[)]d{3}[-]d{2}[-]d{2}$/"
 							title="Enter the valid phone number">
 						</div>
+					</div>
 
 						<hr>
 					<input id="form-button" class="btn btn-success btn-block" type="submit" value="Continue">
@@ -35,9 +36,9 @@
 				<hr>
 				{% for item in items %}
 				<div class="cart-row">
-					<div style="flex:2"><img class="row-image" src="{{ item.product.imageURL }}"></div>
-					<div style="flex:2"><p>{{ item.product.name }}</p></div>
-					<div style="flex:1"><p>${{ item.product.price|floatformat:2 }}</p></div>
+					<div style="flex:2"><img class="row-image" src="{{ item.product_id.imageURL }}"></div>
+					<div style="flex:2"><p>{{ item.product_id.name }}</p></div>
+					<div style="flex:1"><p>${{ item.product_id.price|floatformat:2 }}</p></div>
 					<div style="flex:1"><p>x{{ item.quantity }}</p></div>
 				</div>
 				{% endfor %}
@@ -62,7 +63,9 @@
 	        document.getElementById('payment-info').classList.remove('hidden')
 	    })
 
-	    document.getElementById("make-payment").addEventListener('click', function(e) {
+	    var button_payment = document.getElementById('make-payment');
+
+	    button_payment.addEventListener('click', function(e) {
 	        submitFormData()
 	    })
 

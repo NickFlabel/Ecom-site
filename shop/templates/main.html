@@ -73,8 +73,10 @@
 	    {% if user.is_authenticated %}
 
 	    <div class="form-inline my-2 my-lg-0">
-	        <a class="nav-link" href="{% url 'ecom:store' %}">{{ user.username }}</a>
-	     	<a href="{% url 'ecom:logout' %}"class="btn btn-warning">Logout</a>
+	        <ul class="navbar-nav mr-auto">
+	        <li class="nav-tem active"><a class="nav-link" href="{% url 'ecom:userpage' %}">Welcome, {{ user.username }}!</a></li>
+	     	<li class="nav-tem active"><a href="{% url 'ecom:logout' %}"class="btn btn-warning">Logout</a></li>
+	     	</ul>
 
 	    {% else %}
 

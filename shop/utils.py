@@ -56,6 +56,7 @@ def cartData(request):
     """
     if request.user.is_authenticated:
         customer = request.user.customer
+        print(customer.user_id.username)
         order, created = Order.objects.get_or_create(customer_id=customer, is_paid=False,
         complete=False)
         items = order.orderitem_set.all()

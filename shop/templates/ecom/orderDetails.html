@@ -1,0 +1,24 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+
+<h1>Your order # {{ order.transaction_id }}</h1>
+<ul>
+    <li>The date of the order: {{ order.date_ordered }}</li>
+</ul>
+<h2>Items in the order:</h2>
+<ul>
+    {% for item in order.orderitem_set.all %}
+    <li>{{ item.product_id.name }}: {{ item.quantity }}</li>
+</ul>
+<h3>Total items:</h3> <p>{{ order.get_cart_items }}</p>
+<h3>Total price:</h3> <p>${{ order.get_cart_total }}</p>
+
+{% if order.served %}
+<h5>This order is complete</h5>
+{% else %}
+<h5>This order is not complete</h5>
+{% endif %}
+{% endfor %}
+
+{% endblock content %}

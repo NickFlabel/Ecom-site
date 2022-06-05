@@ -13,11 +13,10 @@ class Cafe(models.Model):
 
 class Customer(models.Model):
     phone_regex = RegexValidator(regex=r'^\+\d{11}$|^8\d{10}$|^\(\d{3}\)\d{7}$|^\(\d{3}\)\d{3}\-\d{2}\-\d{2}$', message='Please, enter the valid phone number')
-    user_id = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    user_id = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name='customer')
     phone_number = models.CharField('Phone Number', validators=[phone_regex], max_length=25)
     first_name = models.CharField(max_length=200, null=True)
     last_name = models.CharField(max_length=200, null=True)
-    bonuses = models.IntegerField(default=0)
 
     def __str__(self):
         return self.phone_number
@@ -49,6 +48,7 @@ class Order(models.Model):
     customer_id = models.ForeignKey(Customer, on_delete=models.SET_NULL, blank=True, null=True)
     date_ordered = models.DateTimeField(auto_now_add=True)
     complete = models.BooleanField(default=False, null=True, blank=False)
+    served = models.BooleanField(default=False, null=True, blank=False)
     is_paid = models.BooleanField(default=False, null=True, blank=False)
     payment_method = models.CharField(max_length=1, choices=PAYMENT_METHODS, null=True)
     transaction_id = models.CharField(max_length=200, null=True)
@@ -93,6 +93,12 @@ class OrderItem(models.Model):
         total = self.product_id.price * self.quantity
         return total
 
+
+class Bonuses(models.Model):
+    number_of_bonuses = models.IntegerField(default=0, null=True, blank=True)
+    customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    worker_id = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    date_added = models.DateTimeField(auto_now_add=True)
 
 
 

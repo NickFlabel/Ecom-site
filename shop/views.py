@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.views.generic import DetailView
+from django.contrib.auth.decorators import login_required
 
 def store(request):
     data = cartData(request)
@@ -45,14 +46,17 @@ def checkout(request):
 
 def updateItem(request):
     data = json.loads(request.body)
+    print('data:', data)
     productId = data['productId']
     action = data['action']
 
     print('Action:', action)
-    print('ProductId;', productId)
+    print('ProductId:', productId)
 
     customer = request.user.customer
+    print(customer.user_id.username)
     product = models.Product.objects.get(id=productId)
+    print(product.name)
     order, created = models.Order.objects.get_or_create(customer_id=customer, complete=False, is_paid=False)
 
     orderItem, created = models.OrderItem.objects.get_or_create(order_id=order, product_id=product)
@@ -109,6 +113,8 @@ def registerPage(request):
             customer = models.Customer(user_id=user, first_name=first_name,
             last_name=last_name, phone_number=phone_number)
             customer.save()
+            bonuses = models.Bonuses(customer_id = customer)
+            bonuses.save()
             messages.success(request, 'Account was created for' + username)
             return redirect('ecom:login')
 
@@ -154,6 +160,38 @@ class ProductDetail(DetailView):
         return context
 
 
+def controlView(request):
+    pass
+
+
+def userPage(request):
+    user = request.user
+    sum_of_bonuses = 0
+    for bonus in user.customer.bonuses_set.all():
+        sum_of_bonuses += bonus.number_of_bonuses
+
+    data = cartData(request)
+
+    cartItems = data['cartItems']
+
+    ctx = {'user': user, 'sum_of_bonuses': sum_of_bonuses, 'cartItems': cartItems}
+    return render(request, 'ecom/account.html', ctx)
+
+
+def orderDetails(request, pk):
+
+    user = request.user
+
+    order = models.Order.objects.get(id=pk)
+
+    if user != order.customer_id.user_id:
+        return redirect('ecom:userpage')
+
+    data = cartData(request)
+    cartItems = data['cartItems']
+    ctx = {'order': order, 'cartItems': cartItems}
+
+    return render(request, 'ecom/orderDetails.html', ctx)
 
 
 

@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from .models import Customer
+from .models import Customer, Product
+import json
 
 
 # Create your tests here.
@@ -110,6 +111,58 @@ class UserAdminTestCase(TestCase):
     def test_user_exists(self):
         user = User.objects.get(username=self.user_name)
         self.assertEqual(user.email, self.user_email)
+
+class OrderPlacementTestCase(TestCase):
+
+    def setUp(self):
+        self.user_password = 'test_123_passworD'
+        self.user_name = 'test_name'
+        self.user_email = 'test@invalid.com'
+        self.first_name = 'mr.test'
+        self.last_name = 'testonson'
+        self.phone_number = '+79991112233'
+        self.registration_url = '/register/'
+        data = {
+            "username":self.user_name,
+            "email":self.user_email,
+            "password1":self.user_password,
+            "password2":self.user_password,
+            "first_name":self.first_name,
+            "last_name":self.last_name,
+            "phone_number":self.phone_number
+            }
+        self.response = self.client.post(self.registration_url, data, follow=True)
+
+        login_url = settings.LOGIN_URL
+        data = {
+            "username": self.user_name,
+            "password": self.user_password
+            }
+        self.response = self.client.post(login_url, data, follow=True)
+
+        product = Product(name='test_product', price=11)
+        product.save()
+
+
+    def test_see_the_user(self):
+        self.store_url = '/'
+        self.assertTrue(self.response.context['user'].is_active)
+        self.response = self.client.get(self.store_url, follow=True)
+        self.assertTrue(self.response.context['user'].is_active)
+
+    def test_add_to_cart(self):
+        products = Product.objects.all()
+        print(products)
+        productId = products[0].id
+        data = {
+            'productId': productId,
+            'action': 'add'
+            }
+        self.client.post('/update_item/', data, content_type='application/json', follow=True)
+        self.response = self.client.get('/cart/', follow=True)
+        self.assertContains(self.response, '<p>test_product</p>')
+
+
 
 
 

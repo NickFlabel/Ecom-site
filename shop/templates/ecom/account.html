@@ -1,0 +1,24 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+
+<div><h1>Hello, {{ user.username }}!</h1></div>
+
+<ul>
+    <li>Your first name: {{ user.customer.first_name }}</li>
+    <li>Your last name: {{ user.customer.last_name }}</li>
+    <li>Your email: {{ user.email }}</li>
+    <li>Your phone number: {{ user.customer.phone_number }}</li>
+    <li>Your bonuses: {{ sum_of_bonuses }}</li>
+</ul>
+
+<h2>Your orders:</h2>
+<ul>
+    {% for order in user.customer.order_set.all %}
+    {% if order.transaction_id != None %}
+    <li>Order # <a href="{% url 'ecom:order_details' order.id %}">{{ order.transaction_id }}</a></li> {% if order.served %} <p>Closed</p> {% else %} <p>Active</p> {% endif %}
+    {% endif %}
+    {% endfor %}
+</ul>
+
+{% endblock content %}
