@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from . import models
 from django.http import JsonResponse
-from .utils import cookieCart, cartData, guestOrder
+from .utils import cookieCart, cartData, guestOrder, add_bonuses_for_transaction, OrderSerializer, CustomerBonusesSerializer
 from django.contrib.auth.forms import UserCreationForm
 import json
 import datetime
@@ -11,8 +11,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.views.generic import DetailView
 from django.contrib.auth.decorators import login_required
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
 def store(request):
+    """This view renders the main page of the e-shop showing all the products in the database
+    """
     data = cartData(request)
 
     cartItems = data['cartItems']
@@ -24,6 +28,8 @@ def store(request):
     return render(request, 'ecom/store.html', ctx)
 
 def cart(request):
+    """This view renders the cart of the user
+    """
     data = cartData(request)
 
     cartItems = data['cartItems']
@@ -34,6 +40,8 @@ def cart(request):
     return render(request, 'ecom/cart.html', ctx)
 
 def checkout(request):
+    """This view renders the checkout page
+    """
     data = cartData(request)
 
     cartItems = data['cartItems']
@@ -45,6 +53,8 @@ def checkout(request):
 
 
 def updateItem(request):
+    """This is POST view that is used to add or delete products from user's cart
+    """
     data = json.loads(request.body)
     print('data:', data)
     productId = data['productId']
@@ -74,6 +84,8 @@ def updateItem(request):
     return JsonResponse('Item was added', safe=False)
 
 def processOrder(request):
+    """This view is POST view and used to process the order info
+    """
     transaction_id = datetime.datetime.now().timestamp()
     data = json.loads(request.body)
 
@@ -92,10 +104,14 @@ def processOrder(request):
 
     order.save()
 
+    add_bonuses_for_transaction(request, customer, total)
+
     return JsonResponse('Payment complete', safe=False)
 
 
 def registerPage(request):
+    """This view is used to render and get POST info from the user in process of registration
+    """
     user_form = CreateUserForm()
     customer_form = CreateCustomerForm()
 
@@ -122,6 +138,8 @@ def registerPage(request):
     return render(request, 'ecom/register.html', ctx)
 
 def loginPage(request):
+    """This view is used to render login page and check the entered data
+    """
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -160,24 +178,18 @@ class ProductDetail(DetailView):
         return context
 
 
-def controlView(request):
-    pass
-
-
 def userPage(request):
     user = request.user
-    sum_of_bonuses = 0
-    for bonus in user.customer.bonuses_set.all():
-        sum_of_bonuses += bonus.number_of_bonuses
 
     data = cartData(request)
 
     cartItems = data['cartItems']
 
-    ctx = {'user': user, 'sum_of_bonuses': sum_of_bonuses, 'cartItems': cartItems}
+    ctx = {'user': user, 'cartItems': cartItems}
     return render(request, 'ecom/account.html', ctx)
 
 
+@api_view(['GET'])
 def orderDetails(request, pk):
 
     user = request.user
@@ -187,11 +199,54 @@ def orderDetails(request, pk):
     if user != order.customer_id.user_id:
         return redirect('ecom:userpage')
 
-    data = cartData(request)
-    cartItems = data['cartItems']
-    ctx = {'order': order, 'cartItems': cartItems}
+    serializer = OrderSerializer(order, many=False)
 
-    return render(request, 'ecom/orderDetails.html', ctx)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def bonusesHistory(request):
+    customer = request.user.customer
+
+    serializer = CustomerBonusesSerializer(customer, many=False)
+
+    return Response(serializer.data)
+
+
+def management(request):
+    user = request.user
+
+    if request.method == 'POST':
+
+        if 'add_bonuses' in request.POST:
+            phone_number_add = request.POST.get('phone_number_add')
+            customer = models.Customer.objects.get(phone_number=phone_number_add)
+
+            number_of_bonuses = int(request.POST.get('number_of_bonuses_add'))
+
+            number = add_bonuses_for_transaction(request, customer, number_of_bonuses)
+            messages.info(request, ('Added '+str(number)+' bonuses'))
+
+        elif 'remove_bonuses' in request.POST:
+            phone_number_add = request.POST.get('phone_number_remove')
+            customer = models.Customer.objects.get(phone_number=phone_number_add)
+
+        return redirect('ecom:management')
+
+    else:
+        orders = models.Order.objects.filter(complete=True)
+        data = cartData(request)
+        cartItems = data['cartItems']
+        ctx = {'user': user, 'cartItems': cartItems, 'orders': orders}
+        return render(request, 'ecom/management.html', ctx)
+
+
+
+
+
+
+
+
 
 
 

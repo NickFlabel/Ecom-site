@@ -1,4 +1,5 @@
 import json
+from rest_framework.serializers import ModelSerializer, StringRelatedField, CharField
 import datetime
 from .models import *
 
@@ -106,5 +107,60 @@ def guestOrder(request, data):
             )
 
     return customer, order
+
+
+def add_bonuses_for_transaction(request, customer, sum_of_transaction):
+    """This function adds or removes bonuses from the customer
+    """
+    number_of_bonuses = round(sum_of_transaction * 0.05)
+    new_boni = Bonuses.objects.create(
+        number_of_bonuses = number_of_bonuses,
+        customer_id = customer,
+        worker_id = request.user,
+        )
+    return new_boni.number_of_bonuses
+
+
+class CustomerOwnBonusesSerializer(ModelSerializer):
+    class Meta:
+        model = Bonuses
+        fields = ['number_of_bonuses', 'date_added']
+
+
+class CustomerBonusesSerializer(ModelSerializer):
+    bonuses_set = CustomerOwnBonusesSerializer(many=True)
+    total_bonuses = CharField(required=False)
+    class Meta:
+        model = Customer
+        fields = ['total_bonuses', 'bonuses_set']
+
+
+class CustomerSerializer(ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ['phone_number', 'first_name', 'last_name']
+
+
+class OrderItemSerializer(ModelSerializer):
+    product_id = StringRelatedField()
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'quantity', 'product_id']
+
+
+class OrderSerializer(ModelSerializer):
+    customer_id = CustomerSerializer()
+    orderitem_set = OrderItemSerializer(read_only=True, many=True)
+    class Meta:
+        model = Order
+        fields = ['date_ordered', 'id',  'transaction_id', 'orderitem_set', 'customer_id']
+
+
+
+
+
+
+
+
 
 

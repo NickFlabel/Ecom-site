@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
+from django.db.models import Sum
 
 class Cafe(models.Model):
     adress = models.CharField(max_length=200, null=True)
@@ -17,6 +18,11 @@ class Customer(models.Model):
     phone_number = models.CharField('Phone Number', validators=[phone_regex], max_length=25)
     first_name = models.CharField(max_length=200, null=True)
     last_name = models.CharField(max_length=200, null=True)
+
+    def total_bonuses(self):
+        boni = self.bonuses_set.all()
+        sum = boni.aggregate(Sum('number_of_bonuses'))
+        return sum['number_of_bonuses__sum']
 
     def __str__(self):
         return self.phone_number
@@ -69,15 +75,6 @@ class Order(models.Model):
         total = sum([item.quantity for item in orderitems])
         return total
 
-    @property
-    def shipping(self):
-        shipping = False
-        orderitems = self.orderitem_set.all()
-        for item in orderitems:
-            if item.product.digital == False:
-                shipping = True
-        return shipping
-
 
 class OrderItem(models.Model):
     product_id = models.ForeignKey(Product, on_delete=models.SET_NULL, blank=True, null=True)
@@ -93,6 +90,8 @@ class OrderItem(models.Model):
         total = self.product_id.price * self.quantity
         return total
 
+    def __str__(self):
+        return self.product_id.name
 
 class Bonuses(models.Model):
     number_of_bonuses = models.IntegerField(default=0, null=True, blank=True)

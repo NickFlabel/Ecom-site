@@ -15,8 +15,10 @@ h1,h2,h3,h4,h5,h6{
 }
 
 .thumbnail{
-	width: 100%;
-	height: 200px;
+	max-width: 100%;
+	margin: 0 auto;
+	max-height: 200px;
+	overflow: hidden;
 	-webkit-box-shadow: -1px -3px 5px -2px rgba(214,214,214,1);
     -moz-box-shadow: -1px -3px 5px -2px rgba(214,214,214,1);
     box-shadow: -1px -3px 5px -2px rgba(214,214,214,1);
@@ -98,3 +100,9 @@ h1,h2,h3,h4,h5,h6{
 .hidden{
 	display: none!important;
 }
+
+.card-account-info {
+    width: 75%;
+}
+
+

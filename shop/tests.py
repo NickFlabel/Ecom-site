@@ -152,7 +152,6 @@ class OrderPlacementTestCase(TestCase):
 
     def test_add_to_cart(self):
         products = Product.objects.all()
-        print(products)
         productId = products[0].id
         data = {
             'productId': productId,
@@ -162,6 +161,22 @@ class OrderPlacementTestCase(TestCase):
         self.response = self.client.get('/cart/', follow=True)
         self.assertContains(self.response, '<p>test_product</p>')
 
+    def test_make_order(self):
+        products = Product.objects.all()
+        productId = products[0].id
+        data = {
+            'productId': productId,
+            'action': 'add'
+            }
+        response = self.client.post('/update_item/', data, content_type='application/json', follow=True)
+        total = User.objects.get(username=self.user_name).customer.order_set.all()[0].get_cart_total
+        data = {
+            'form': {
+                'total': total
+                }
+            }
+        self.response = self.client.post('/process_order/', data, content_type="application/json", follow=True)
+        self.assertContains(self.response, "Payment complete")
 
 
 
