@@ -1,3 +1,6 @@
+console.log('reactOrders is loaded')
+
+
 class OrderItemSet extends React.Component {
         constructor(props) {
             super(props)
@@ -54,22 +57,26 @@ class OrderItem extends React.Component {
 
 let getOrder = async (id=id) => {
     let response = await fetch('http://flaviusbelisarius.pythonanywhere.com/api/orders/' + id)
+    console.log(response)
     let data = await response.json()
     console.log('data1:', data)
     return data
 }
 
-const orders = document.getElementsByClassName('order-button');
-
-for (i = 0; i < orders.length; i++) {
-    orders[i].addEventListener('click', function() {
-        var id = this.id
-        getOrder(id).then(function(result) {
-        ReactDOM.render(<OrderItem
-                        id={result.id}
-                        date_ordered={result.date_ordered}
-                        orderitem_set={result.orderitem_set}
-                        customer_id={result.customer_id}
-                        />, document.getElementById('additional-info'))
+const initOrderButtons = function() {
+    var orders = document.getElementsByClassName('order-button');
+    console.log('orders:', orders)
+    for (i = 0; i < orders.length; i++) {
+        orders[i].addEventListener('click', function() {
+            const id = this.id
+            console.log(id)
+            getOrder(id).then(function(result) {
+            ReactDOM.render(<OrderItem
+                            id={result.id}
+                            date_ordered={result.date_ordered}
+                            orderitem_set={result.orderitem_set}
+                            customer_id={result.customer_id}
+                            />, document.getElementById('additional-info'))
         })})
     }
+}

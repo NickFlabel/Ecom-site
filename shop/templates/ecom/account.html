@@ -1,6 +1,9 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content %}
+{{ user.id|json_script:"user-data" }}
+
+{% csrf_token %}
 
 <div class='row'>
 
@@ -8,18 +11,15 @@
 <div><h1>Hello, {{ user.username }}!</h1></div>
 
 <div class="card" style="width: 75%">
-<div class="card-body">
-<ul class="list-group list-group-flush">
-    <li class="list-group-item">Your first name: {{ user.customer.first_name }}</li>
-    <li class="list-group-item">Your last name: {{ user.customer.last_name }}</li>
-    <li class="list-group-item">Your email: {{ user.email }}</li>
-    <li class="list-group-item">Your phone number: {{ user.customer.phone_number }}</li>
+<div id="personal-info-list">
+</div>
+<div id='management-buttons'>
     {% if user.customer.total_bonuses > 0 %}
     <li class="list-group-item"><button id="bonuses-button" class="btn btn-primary">Your number of bonuses: {{ user.customer.total_bonuses }} </button></li>
     {% else %}
-    <li class="list-group-item">You don't have any bonuses yet! Order something so we can add you some bonuses!</li>
+    <p>You don't have any bonuses yet! Order something so we can add you some bonuses!</p>
     {% endif %}
-</ul>
+    <button id="change-info-button" class="btn btn-primary">Change your personal information</button>
 </div>
 </div>
 </div>
@@ -40,11 +40,16 @@
 
 </div>
 
+	<script type="text/babel" src="{% static 'js/reactBonuses.js' %}"></script>
+
+	<script type="text/babel" src="{% static 'js/updatePersonalInfo.js' %}"></script>
 
 	<script type="text/babel" src="{% static 'js/reactOrders.js' %}"></script>
 
-	<script type="text/babel" src="{% static 'js/reactBonuses.js' %}"></script>
-
+    <script type="text/babel">
+	        initOrderButtons()
+	        initBonusesButton()
+    </script>
 {% endblock content %}
 
 

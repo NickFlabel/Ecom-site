@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 from django.db.models import Sum
+from .utils import phone_validator
 
 class Cafe(models.Model):
     adress = models.CharField(max_length=200, null=True)
@@ -13,9 +14,8 @@ class Cafe(models.Model):
 
 
 class Customer(models.Model):
-    phone_regex = RegexValidator(regex=r'^\+\d{11}$|^8\d{10}$|^\(\d{3}\)\d{7}$|^\(\d{3}\)\d{3}\-\d{2}\-\d{2}$', message='Please, enter the valid phone number')
     user_id = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name='customer')
-    phone_number = models.CharField('Phone Number', validators=[phone_regex], max_length=25)
+    phone_number = models.CharField('Phone Number', validators=[phone_validator], max_length=25)
     first_name = models.CharField(max_length=200, null=True)
     last_name = models.CharField(max_length=200, null=True)
 

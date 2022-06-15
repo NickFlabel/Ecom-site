@@ -13,3 +13,9 @@ class CreateCustomerForm(ModelForm):
     class Meta:
         model = Customer
         fields = ['first_name', 'last_name', 'phone_number']
+
+
+class UserEmailForm(ModelForm):
+    class Meta:
+        model = User
+        fields = ['email']

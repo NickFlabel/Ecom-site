@@ -1,0 +1,81 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+
+<div class="row">
+<div id="all-orders-list" class="col-md-4" style="overflow-y: scroll; height: 100vh">
+
+</div>
+
+<div class="col-md-4">
+    <div>
+        <h1>The order</h1>
+    </div>
+    <div id="additional-info">
+
+    </div>
+</div>
+
+<div class="col-md-4">
+    <h1>Add bonuses</h1>
+    <form method="post" action="{% url 'ecom:management' %}" name="add-bonuses">
+        {% csrf_token %}
+        <div class="form-group">
+            <input type="hidden" name="add_bonuses" />
+			<div calss="form-floating my-5">
+			    <label for="phone_number_add" class="form-label">Enter the phone number</label>
+			    <input type="tel" placeholder="Enter the phone number of the customer" class="form-control" style="width:80%" name="phone_number_add" />
+			</div>
+			<div class="form-floating my-5">
+			    <label for="number_of_bonuses_add" class="form-label">Enter the amount paid</label>
+			    <input type="number" placeholder="Enter the amount paid" name="number_of_bonuses_add" class="form-control" style="width:80%" />
+			</div>
+			<div>
+			    <input class="btn btn-primary text-center" id="add-bonuses" type="submit" value="Submit" >
+			</div>
+			{% for message in messages %}
+			    <p id="messages">{{ message }}</p>
+			{% endfor %}
+	    </div>
+    </form>
+    <h1>Remove bonuses</h1>
+    <form method="post" action="{% url 'ecom:management' %}" name="remove-bonuses">
+        {% csrf_token %}
+        <div class="form-group">
+            <input type="hidden" name="remove_bonoses" />
+			<div class-"form-floating my-5">
+			    <label for="phone_number_remove" class="form-label">Enter the phone number</label>
+			    <input type="tel" placeholder="Enter the phone number of the customer" name="phone_number_remove" class="form-control" style="width:80%" />
+			</div>
+			<div class-"form-floating my-5">
+			    <label for="number_of_bonuses_remove" class="form-label">Enter the amount of bonuses to remove</label>
+			    <input type="number" placeholder="Enter price of the goods" name="number_of_bonuses_remove" class="form-control" style="width:80%" />
+			</div>
+			<div>
+			    <input class="btn btn-primary" id="add-bonuses" type="submit" value="Submit" >
+			</div>
+			{% for message in messages %}
+			    <p id="messages">{{ message }}</p>
+			{% endfor %}
+	    </div>
+    </form>
+
+
+</div>
+
+
+	<script type="text/babel" src="{% static 'js/reactOrders.js' %}"></script>
+
+	<script type="text/babel" src="{% static 'js/allOrders.js' %}"></script>
+
+
+{% endblock content %}
+
+
+
+
+
+
+
+
+

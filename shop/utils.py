@@ -1,7 +1,8 @@
 import json
-from rest_framework.serializers import ModelSerializer, StringRelatedField, CharField
-import datetime
-from .models import *
+import phonenumbers
+from django.core.exceptions import ValidationError
+from . import models
+
 
 def cookieCart(request):
     """This function takes a request and checks for a cookie containing JSON with
@@ -23,7 +24,7 @@ def cookieCart(request):
         try:
             cartItems += cart[i]['quantity']
 
-            product = Product.objects.get(id=i)
+            product = models.Product.objects.get(id=i)
             total = (product.price * cart[i]['quantity'])
 
             order['get_cart_total'] += total
@@ -58,7 +59,7 @@ def cartData(request):
     if request.user.is_authenticated:
         customer = request.user.customer
         print(customer.user_id.username)
-        order, created = Order.objects.get_or_create(customer_id=customer, is_paid=False,
+        order, created = models.Order.objects.get_or_create(customer_id=customer, is_paid=False,
         complete=False)
         items = order.orderitem_set.all()
         cartItems = order.get_cart_items
@@ -83,7 +84,7 @@ def guestOrder(request, data):
     items = cookieData['items']
 
     # Checks if this customer already exists or not
-    customer, created = Customer.objects.get_or_create(
+    customer, created = models.Customer.objects.get_or_create(
         phone_number=phone_number
         )
 
@@ -91,7 +92,7 @@ def guestOrder(request, data):
     customer.save()
 
     # Create new order for this customer
-    order = Order.objects.create(
+    order = models.Order.objects.create(
         customer_id=customer,
         complete=False,
         is_paid=False
@@ -99,8 +100,8 @@ def guestOrder(request, data):
 
     # Add items from cookie cart to the order
     for item in items:
-        product = Product.objects.get(id=item['product']['id'])
-        orderItem = OrderItem.objects.create(
+        product = models.Product.objects.get(id=item['product']['id'])
+        orderItem = models.OrderItem.objects.create(
             product_id=product,
             order_id=order,
             quantity=item['quantity']
@@ -113,7 +114,7 @@ def add_bonuses_for_transaction(request, customer, sum_of_transaction):
     """This function adds or removes bonuses from the customer
     """
     number_of_bonuses = round(sum_of_transaction * 0.05)
-    new_boni = Bonuses.objects.create(
+    new_boni = models.Bonuses.objects.create(
         number_of_bonuses = number_of_bonuses,
         customer_id = customer,
         worker_id = request.user,
@@ -121,46 +122,9 @@ def add_bonuses_for_transaction(request, customer, sum_of_transaction):
     return new_boni.number_of_bonuses
 
 
-class CustomerOwnBonusesSerializer(ModelSerializer):
-    class Meta:
-        model = Bonuses
-        fields = ['number_of_bonuses', 'date_added']
 
-
-class CustomerBonusesSerializer(ModelSerializer):
-    bonuses_set = CustomerOwnBonusesSerializer(many=True)
-    total_bonuses = CharField(required=False)
-    class Meta:
-        model = Customer
-        fields = ['total_bonuses', 'bonuses_set']
-
-
-class CustomerSerializer(ModelSerializer):
-    class Meta:
-        model = Customer
-        fields = ['phone_number', 'first_name', 'last_name']
-
-
-class OrderItemSerializer(ModelSerializer):
-    product_id = StringRelatedField()
-    class Meta:
-        model = OrderItem
-        fields = ['id', 'quantity', 'product_id']
-
-
-class OrderSerializer(ModelSerializer):
-    customer_id = CustomerSerializer()
-    orderitem_set = OrderItemSerializer(read_only=True, many=True)
-    class Meta:
-        model = Order
-        fields = ['date_ordered', 'id',  'transaction_id', 'orderitem_set', 'customer_id']
-
-
-
-
-
-
-
-
-
+def phone_validator(phone_number):
+    number = phonenumbers.parse(phone_number, 'RU')
+    if not phonenumbers.is_valid_number(number):
+        raise ValidationError('This phone number is not valid: ', phone_number)
 

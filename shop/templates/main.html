@@ -69,9 +69,15 @@
 	      <li class="nav-item active">
 	        <a class="nav-link" href="{% url 'ecom:store' %}">Store</a>
 	      </li>
+	      {% with groups=user.groups.all %}
+	      {% for group in groups %}
+	      {% if group.name == 'worker' %}
 	      <li class="nav-item active">
 	        <a class="nav-link" href="{% url 'ecom:management' %}">Management</a>
 	      </li>
+	      {% endif %}
+	      {% endfor %}
+	      {% endwith %}
 
 	    {% if user.is_authenticated %}
 

@@ -43,16 +43,23 @@ class BonusInfo extends React.Component {
 }
 
 let getBonuses = async () => {
-    let response = await fetch('http://flaviusbelisarius.pythonanywhere.com/api/bonuses/')
+    let user = JSON.parse(document.getElementById('user-data').textContent)
+    console.log(user)
+    let response = await fetch('http://flaviusbelisarius.pythonanywhere.com/api/bonuses/' + user)
     let data = await response.json()
     console.log('data1:', data)
     return data
 }
 
-const bonuses = document.getElementById('bonuses-button');
-bonuses.addEventListener('click', function() {
-        getBonuses().then(function(result) {
-        ReactDOM.render(<Bonuses
-                        bonuses_set = {result.bonuses_set}
-                        />, document.getElementById('additional-info'))
+const initBonusesButton = function() {
+    const bonuses = document.getElementById('bonuses-button');
+    console.log(bonuses)
+    if (bonuses) {
+    bonuses.addEventListener('click', function() {
+            getBonuses().then(function(result) {
+            ReactDOM.render(<Bonuses
+                            bonuses_set = {result.bonuses_set}
+                            />, document.getElementById('additional-info'))
         })})
+}
+}
