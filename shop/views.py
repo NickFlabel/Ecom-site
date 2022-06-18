@@ -1,9 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from . import models
 from django.http import JsonResponse
-from .utils import cookieCart, cartData, guestOrder, add_bonuses_for_transaction
-from .serializers import OrderSerializer, CustomerBonusesSerializer, CustomerSerializer, UserIdSerializer, AllOrdersSerializer
-from django.contrib.auth.forms import UserCreationForm
+from .utils import cartData, guestOrder, add_bonuses_for_transaction, phone_formating
+from .serializers import OrderSerializer, CustomerBonusesSerializer, CustomerSerializer, UserIdSerializer, AllOrdersSerializer, CustomerOrdersSerializer
 import json
 import datetime
 from . forms import CreateUserForm, CreateCustomerForm, UserEmailForm
@@ -68,6 +67,19 @@ def updateItem(request):
     print('Action:', action)
     print('ProductId:', productId)
 
+    customer = request.user.customer
+    product = models.Product.objects.get(id=productId)
+    order, created = models.Order.objects.get_or_create(customer_id=customer, complete=False, is_paid=False)
+    orderItem, created = models.OrderItem.objects.get_or_create(order_id=order, product_id=product)
+    if action == 'add':
+        orderItem.quantity = (orderItem.quantity + 1)
+    elif action == 'remove':
+        orderItem.quantity = (orderItem.quantity - 1)
+    orderItem.save()
+
+    if orderItem.quantity <= 0:
+        orderItem.delete()
+
     return JsonResponse('Item was added', safe=False)
 
 def processOrder(request):
@@ -106,7 +118,6 @@ def registerPage(request):
     if request.method == 'POST':
         user_form = CreateUserForm(request.POST)
         customer_form = CreateCustomerForm(request.POST)
-        print(customer_form)
         if user_form.is_valid() and customer_form.is_valid():
             user_form.save()
             username = user_form.cleaned_data.get('username')
@@ -115,8 +126,7 @@ def registerPage(request):
             first_name = customer_form.cleaned_data['first_name']
             last_name = customer_form.cleaned_data['last_name']
             phone_number = customer_form.cleaned_data['phone_number']
-            phone_number = phonenumbers.parse(phone_number, 'RU')
-            phone_number = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.NATIONAL)
+            phone_number = phone_formating(phone_number)
             customer = models.Customer(user_id=user, first_name=first_name,
             last_name=last_name, phone_number=phone_number)
             customer.save()
@@ -178,6 +188,9 @@ class ProductDetail(DetailView):
 def userPage(request):
     """This view renders the userpage
     """
+    if not request.user.is_authenticated:
+        return redirect('ecom:store')
+
     user = request.user
 
     data = cartData(request)
@@ -225,12 +238,7 @@ def orderDetails(request, pk):
     """This API view allows for fetching the order data from the server
     """
 
-    user = request.user
-
     order = models.Order.objects.get(id=pk)
-
-    #if user != order.customer_id.user_id or 'worker' not in user.groups.all()[0].name:
-    #    return redirect('ecom:userpage')
 
     serializer = OrderSerializer(order, many=False)
 
@@ -251,6 +259,8 @@ def bonusesHistory(request, pk):
 @api_view(['GET'])
 @the_same_user
 def customerInfo(request, pk):
+    """This API view transfers the info on the requested customer
+    """
 
     customer = User.objects.get(id=pk).customer
 
@@ -260,6 +270,9 @@ def customerInfo(request, pk):
 
 @api_view(['PUT'])
 def update_info(request):
+    """This API view updates the info on the user according to the data in
+    the request
+    """
 
     data = request.body
 
@@ -273,8 +286,7 @@ def update_info(request):
         }
     form_to_check = CreateCustomerForm(data_customer)
     if form_to_check.is_valid():
-        phone_number = phonenumbers.parse(data['phone_number'], 'RU')
-        phone_number = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.NATIONAL)
+        phone_number = phone_formating(data['phone_number'])
         customer.phone_number = phone_number
         customer.first_name = data['first_name']
         customer.last_name = data['last_name']
@@ -294,23 +306,28 @@ def update_info(request):
 
 @api_view(['GET'])
 def get_current_user(request):
+    """This API view transfers the ID of the current user
+    """
     user = request.user
     serializer = UserIdSerializer(user)
     return Response(serializer.data)
 
-
 @api_view(['GET'])
 def get_all_orders(request):
+    """This API view transfers data containing all placed orders
+    """
     orders = models.Order.objects.all()
     serializer = AllOrdersSerializer(orders, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
 def get_customer_by_phone_number(request, phone_number):
-
-    phone_number = phonenumbers.parse(phone_number, 'RU')
-    phone_number = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.NATIONAL)
-
+    """This API view transfers data on the user with the corresponding phone number
+    """
+    try:
+        phone_number = phone_formating(phone_number)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
     customer = models.Customer.objects.get(phone_number=phone_number)
 
     if customer:
@@ -318,6 +335,65 @@ def get_customer_by_phone_number(request, phone_number):
         return Response(serializer.data)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@allowed_users(allowed_roles=['worker'])
+@api_view(['POST'])
+def post_new_bonuses(request):
+    data = request.body
+    data = json.loads(data)
+
+    worker_id = request.user
+    customer_id = models.Customer.objects.get(id=data['customerId'])
+    number_of_bonuses = data['numberOfBonuses']
+
+    new_bonus = models.Bonuses(number_of_bonuses=number_of_bonuses, customer_id=customer_id, worker_id=worker_id)
+    new_bonus.save()
+
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@allowed_users(allowed_roles=['worker'])
+@api_view(['PUT'])
+def order_accept_payment(request):
+    data = request.body
+    data = json.loads(data)
+
+    order = models.Order.objects.get(id=data['id'])
+    order.is_paid = True
+    order.save()
+
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@allowed_users(allowed_roles=['worker'])
+@api_view(['PUT'])
+def order_serve(request):
+    data = request.body
+    data = json.loads(data)
+
+    order = models.Order.objects.get(id=data['id'])
+    order.served = True
+    order.save()
+
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@allowed_users(allowed_roles=['worker'])
+@api_view(['GET'])
+def get_customer_orders_by_phone_number(request, phone_number):
+    try:
+        phone_number = phone_formating(phone_number)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    customer = get_object_or_404(models.Customer, phone_number=phone_number)
+
+    serializer = CustomerOrdersSerializer(customer, many=False)
+    return Response(serializer.data)
+
+
+
+
 
 
 

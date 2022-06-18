@@ -22,7 +22,11 @@ urlpatterns = [
     path('api/customer/<int:pk>', views.customerInfo, name='customerInfo'),
     path('api/customer/update', views.update_info, name='updateCustomer'),
     path('api/getCurrentUser/', views.get_current_user, name='getCurrentUser'),
-    path('api/customer/<str:phone_number>', views.get_customer_by_phone_number, name="getCustomerByPhone"),
+    path('api/customerPhone/<str:phone_number>', views.get_customer_by_phone_number, name="getCustomerByPhone"),
+    path('api/postNewBonuses/', views.post_new_bonuses, name="postNewBonuses"),
+    path('api/order/acceptPayment/', views.order_accept_payment, name="acceptPayment"),
+    path('api/order/serveOrder/', views.order_serve, name="serveOrder"),
+    path('api/orders/getByPhone/<str:phone_number>', views.get_customer_orders_by_phone_number, name="getCustomerOrdersByPhone"),
 
     path('management/', views.management, name='management')
     ]

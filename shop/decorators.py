@@ -15,6 +15,8 @@ def unauthenticated_user(func):
     return wrapper
 
 def allowed_users(allowed_roles=[]):
+    """This decorator checks if the user has the right to access the view
+    """
     def decorator(func):
         def wrapper(request, *args, **kwargs):
 
@@ -28,13 +30,18 @@ def allowed_users(allowed_roles=[]):
                     if group.name in allowed_roles:
                         return func(request, *args, **kwargs)
                 else:
-                    return HttpResponse('You are not authorized to view that page')
+                    return HttpResponse('Unauthorized', status=401)
+            else:
+                return HttpResponse('Unauthorized', status=401)
 
         return wrapper
     return decorator
 
 
 def the_same_user(func):
+    """This decorator checks if the user requesting the view is the same
+    user info of whom is beign requested
+    """
     def wrapper(request, pk, *args, **kwargs):
         if request.user.id == pk:
             return func(request, pk, *args, **kwargs)

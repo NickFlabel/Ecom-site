@@ -22,7 +22,7 @@ class UserAuthTestCase(TestCase):
         self.user_email = 'test@invalid.com'
         self.first_name = 'mr.test'
         self.last_name = 'testonson'
-        self.phone_number = '+79991112233'
+        self.phone_number = '+79161112233'
         self.registration_url = '/register/'
         data = {
             "username":self.user_name,
@@ -55,7 +55,7 @@ class UserAuthTestCase(TestCase):
         user_email = 'test2@invalid.com'
         first_name = 'mr.wrong'
         last_name = 'wrongson'
-        phone_number = '+7111WmmmmmRONG11'
+        phone_number = '+7916111ww3'
         data = {
             "username":user_name,
             "email":user_email,
@@ -65,10 +65,10 @@ class UserAuthTestCase(TestCase):
             "last_name":last_name,
             "phone_number":phone_number
             }
-        response = self.client.post(self.registration_url, data, follow=True)
+        response = self.client.post(self.registration_url, data, follow=False)
         status_code = response.status_code
+        print(status_code)
         self.assertEqual(status_code, 200)
-        self.assertContains(response, 'Please, enter the valid phone number')
 
     def test_login(self):
         """This test checks if the user registered in the setup can properly
@@ -120,7 +120,7 @@ class OrderPlacementTestCase(TestCase):
         self.user_email = 'test@invalid.com'
         self.first_name = 'mr.test'
         self.last_name = 'testonson'
-        self.phone_number = '+79991112233'
+        self.phone_number = '+79161112233'
         self.registration_url = '/register/'
         data = {
             "username":self.user_name,
@@ -168,7 +168,7 @@ class OrderPlacementTestCase(TestCase):
             'productId': productId,
             'action': 'add'
             }
-        response = self.client.post('/update_item/', data, content_type='application/json', follow=True)
+        self.client.post('/update_item/', data, content_type='application/json', follow=True)
         total = User.objects.get(username=self.user_name).customer.order_set.all()[0].get_cart_total
         data = {
             'form': {
@@ -179,7 +179,50 @@ class OrderPlacementTestCase(TestCase):
         self.assertContains(self.response, "Payment complete")
 
 
+class TestUrlsNoLogin(TestCase):
 
+    def setUp(self):
+        product = Product(name='test_product', price=11)
+        self.product = product
+        product.save()
 
+    def test_main_page(self):
+        response = self.client.get('/', follow=True)
+        status_code = response.status_code
+        self.assertEqual(status_code, 200)
 
+    def test_cart_page(self):
+        response = self.client.get('/cart/', follow=True)
+        status_code = response.status_code
+        self.assertEqual(status_code, 200)
+
+    def test_checkout_page(self):
+        response = self.client.get('/checkout/', follow=True)
+        status_code = response.status_code
+        self.assertEqual(status_code, 200)
+
+    def test_login_page(self):
+        response = self.client.get('/login/', follow=True)
+        status_code = response.status_code
+        self.assertEqual(status_code, 200)
+
+    def test_register_page(self):
+        response = self.client.get('/register/', follow=True)
+        status_code = response.status_code
+        self.assertEqual(status_code, 200)
+
+    def test_account_page(self):
+        response = self.client.get('/account/', follow=False)
+        status_code = response.status_code
+        self.assertEqual(status_code, 302)
+
+    def test_management_page(self):
+        response = self.client.get('/management/', follow=True)
+        status_code = response.status_code
+        self.assertEqual(status_code, 401)
+
+    def test_product_details(self):
+        response = self.client.get('/' + str(self.product.id) + '/', follow=True)
+        status_code = response.status_code
+        self.assertEqual(status_code, 200)
 

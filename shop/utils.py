@@ -123,8 +123,25 @@ def add_bonuses_for_transaction(request, customer, sum_of_transaction):
 
 
 
-def phone_validator(phone_number):
+def phone_validator(phone_number:str):
+    """This function validates the phone number
+    """
     number = phonenumbers.parse(phone_number, 'RU')
     if not phonenumbers.is_valid_number(number):
         raise ValidationError('This phone number is not valid: ', phone_number)
+
+
+def phone_formating(phone_number:str):
+    """This function reformats the phone number into the uniform format
+    """
+    phone_number = phonenumbers.parse(phone_number, 'RU')
+    return phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+
+
+
+
+
+
+
+
 
