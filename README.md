@@ -1,55 +1,74 @@
-1.	Цель Проекта
-Цель проекта – разработка веб-сайта для интернет-коммерции (далее – Сайт). Владелец магазина может загружать на Сайт товары, управлять их стоимостью, отслеживать сделанные пользователями заказы на эти товары. На Сайте предусмотрена система онлайн-оплаты и начисления/списания бонусов.
+1.	The goal of the project
+The goal of this project is to develop e-com website (hereinafter – Website). The owner of the shop can upload the products on the Website, to manage its cost, view placed orders on said products by the customers. The Web Site provides the means to make payment for the order as well as the system of adding/subtracting customer bonuses. 
 
-2.	Описание системы
-Система состоит из следующих основных функциональных блоков:
-1)	Регистрация, аутентификация и авторизация;
-2)	Функционал для создания/удаления/обновления/просмотра товаров;
-3)	Функционал для формирования заказа;
-4)	Функционал для оплаты заказа;
-5)	Функционал для начисления/списания бонусов;
-6)	Функционал для отслеживания заказов.
+2. The description of the project
+The system consists of the main functional blocks:
+1)	Registration, authentication and authorization;
+2)	CRUD functions;
+3)	Placing order functions;
+4)	Order payment functions;
+5)	Bonus addition/subtraction functions;
+6)	Order tracking function.
 
-2.1.	Типы пользователей
-Сайт предполагает функционирование четырех типов пользователей:
-1)	Собственник сайта;
-2)	Работник предприятия;
-3)	Зарегистрированный клиент;
-4)	Незарегистрированный клиент.
-2.2.	Регистрация
-Регистрация зависит от типа пользователя:
-2.2.1.	Регистрация собственника осуществляется при запуске инсталляции Сайта. Обязательными реквизитами является имя и пароль.
-2.2.2.	Регистрация работников предприятия осуществляется собственником сайта в интерфейсе администратора Сайта. Обязательными реквизитами является имя и пароль.
-2.2.3.	Регистрация зарегистрированного клиента осуществляется двумя способами. В первом случае пользователь, имеющий статус работника имеет возможность зарегистрировать нового клиента, введя его номер телефона и предложив новому клиенту ввести его пароль. Во втором случае пользователь сам имеет возможность зарегистрироваться на Сайте, используя специальный интерфейс регистрации.
-2.3.	Аутентификация типов пользователей
-Аутентификация происходит при помощи интерфейса Сайта. Для прохождения аутентификации пользователь должен ввести свое сочетание логина и пароля. 
-2.4.	Функционал для клиента
-Зарегистрированный клиент получает доступ к следующему функционалу:
-1)	Доступ к личному кабинету, в котором будут указана следующая информация: количество баллов, история заказов;
-2)	Доступ к корзине, возможность добавлять заказы в корзину;
-3)	Заказ товара на сайте с возможностью оплаты.
-2.5.	 Функционал для работника
-Работник предприятия получает доступ к следующему функционалу:
-1)	Отслеживание заказов;
-2)	Изменение статуса заказа (о выполнении заказа);
-3)	Начисление/списание бонусов по номеру телефона клиента.
-2.6.	 Функционал для собственника
-Собственник получает доступ к функционалу работника и, кроме того:
-1)	Возможность добавления/удаления профилей работников;
-2)	Возможность удаления/добавления/редактирования товаров на сайте.
-2.7.	Функционал главной страницы
-Главная страница сайта одновременно является списком всех товаров, зарегистрированных на данном сайте. Взаимодействие с каждым отдельным товаром позволяет: добавить/убрать этот товар из корзины, открыть страницу деталей. Кроме того, предусмотрен функционал поиска по названию. Фильтрация на главной странице осуществляется по магазину, к которому приписан данный товар. 
-2.8.	 Функционал страницы деталей 
-Страница деталей позволяет ознакомится с товаром и всей дополнительной информацией о нем, а также предусматривает функционал взаимодействия с товаром аналогичный тому, что предусмотрен на главной странице.
-2.9.	Функционал корзины
-Корзина позволяет удалять/уменьшать/увеличивать количество отложенного товара, а также переходить к этапу оплаты. 
-2.10.	Функционал страницы для работника
-Этот функционал доступен только для пользователя из категории «работник». Страница разбита на три сегмента – в первом отслеживаются заказы, отнесенные к данному магазину, во втором – возможность списывать/начислять баллы клиенту по номеру телефона, в третьем – возможность создать нового клиента. 
-3.	Стек технологий
-Для реализации Сайта предлагается следующий стек технологий:
-•	Бэкенд:
-o	Язык Python;
-o	Фреймворк Django;
-o	БД PostgreSQL.
-•	Фронтенд:
-o	CSS фреймворк Bootstrap.
+2.1.	Types of users
+Website allows for four types of users:
+1)	The owner of the Website;
+2)	The employee;
+3)	Registered customer;
+4)	Unregistered customer.
+
+2.2.	Registration
+Registration depends on the type of user:
+The registration of the owner is executed during the installation of the Website. Name and password are mandatory fields.
+The owner of the Website performs the registration of the employee in the administration interface of Website. Name and password are mandatory fields.
+Registration of the customer can be performed in two different ways. The first way is registration by employee by entering the new customer’s phone number, email and password. The second way is registration by the customer himself using the Website interface. 
+
+2.3.	Authentication of the different types of users
+Authentication is performed using the Web Site interface. For authentication the user should enter his login and password.
+
+2.4.	Website functions for customer
+Registered customer have access to the following functions:
+1) Access to the personal web page, which contains the following information: the number of bonuses, order history, bonuses history, ability to change personal info;
+2) Access to the cart, ability to add and subtract the products to and from the cart;
+3) Ability to place the order on the Website with the possibility of payment.
+
+2.5.	 Website functions for employees.
+The employees have access to the following functions:
+1) Order tracking
+2) Changing the status of the order (fulfillment of the order)
+3) Adding and subtracting bonuses by entering the phone number of the customer
+
+2.6.	 Website functions for the owner of the Website
+The owner of the web site has access to the same functions as the employee as well as:
+1) The ability to add, view, update and delete the employee profiles
+2) The ability to add, view, update and delete the products placed on the Web Site
+
+2.7.	Main Page Functions
+The main page of the Web Site serves simultaneously as the list of all products registered in the database. Each segment represents one product and allow the user to add this product to the cart, open the details page.
+
+2.8.	 Details page functions
+Details page allows viewing the product and all additional data concerning this product as well as allowing for the same functions the user has on the main page. 
+
+2.9.	Cart Page Functions
+The cart allows deleting/subtracting/adding the number of products in the cart as well as opening the checkout page.
+
+2.10.	Employee page functions
+The users of “employee” or “owner” type can only access to the employee page. The page is divided to three blocks. First block allows tracking opened orders, which are connected to the shop of this employee. The second block allows adding and subtracting bonuses from the customer’s account by entering the phone number. The third block allows for displaying the order info.
+
+3. Technology stack:
+For the development of the Web Site the usage of the following technologies are proposed:
+•	Backend:
+	Python3;
+  Django REST Framework;
+	Django Web Framework;
+	PostgreSQL (on deploy).
+•	Frontend:
+	Bootstratp;
+  JavaScript;
+  Rest.js
+
+The link to the deployed prototype: http://flaviusbelisarius.pythonanywhere.com/
+
+Login/Password to see full functionality as a worker of the cafe:
+Login: TestUserWorker
+Password: tEsTuSeR1
