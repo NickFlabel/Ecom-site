@@ -1,6 +1,7 @@
 import json
 import phonenumbers
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
 from . import models
 
 
@@ -31,7 +32,7 @@ def cookieCart(request):
             order['get_cart_items'] += cart[i]['quantity']
 
             item = {
-                'product':{
+                'product_id':{
                     'id':product.id,
                     'name':product.name,
                     'price':product.price,
@@ -42,8 +43,6 @@ def cookieCart(request):
                 }
             items.append(item)
 
-            if product.digital == False:
-                order['shipping'] = True
         except:
             pass
 
@@ -138,7 +137,61 @@ def phone_formating(phone_number:str):
     return phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
 
 
+def update_order_item_quantity(productId, action, request):
+    """This function talkes the pk of the orderitem and adds or removes 1 from its
+    quantity depending on the action
+    """
+    customer = request.user.customer
+    product = models.Product.objects.get(id=productId)
+    order, created = models.Order.objects.get_or_create(customer_id=customer, complete=False, is_paid=False)
+    orderItem, created = models.OrderItem.objects.get_or_create(order_id=order, product_id=product)
+    if action == 'add':
+        orderItem.quantity = (orderItem.quantity + 1)
+    elif action == 'remove':
+        orderItem.quantity = (orderItem.quantity - 1)
+    orderItem.save()
 
+    if orderItem.quantity <= 0:
+        orderItem.delete()
+
+
+def process_placed_order(request, data):
+    """This function takes POST data and places an order
+    """
+
+    if request.user.is_authenticated:
+        customer = request.user.customer
+        order, created = models.Order.objects.get_or_create(customer_id=customer, complete=False)
+
+    else:
+        customer, order = guestOrder(request, data)
+
+    total = float(data['form']['total'])
+
+    if total == order.get_cart_total:
+        order.complete = True
+
+    order.save()
+
+    add_bonuses_for_transaction(request, customer, total)
+
+
+def register_new_user(request, user_form, customer_form):
+    """This function takes a POST request and registers a new user (and customer)
+    """
+    user_form.save()
+    username = user_form.cleaned_data.get('username')
+    User = get_user_model()
+    user = User.objects.get(username=username)
+    first_name = customer_form.cleaned_data['first_name']
+    last_name = customer_form.cleaned_data['last_name']
+    phone_number = customer_form.cleaned_data['phone_number']
+    phone_number = phone_formating(phone_number)
+    customer = models.Customer(user_id=user, first_name=first_name,
+    last_name=last_name, phone_number=phone_number)
+    customer.save()
+    bonuses = models.Bonuses(customer_id = customer)
+    bonuses.save()
 
 
 
